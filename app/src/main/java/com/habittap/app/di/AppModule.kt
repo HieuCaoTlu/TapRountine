@@ -1,7 +1,6 @@
 package com.habittap.app.di
 
 import android.content.Context
-import androidx.room.Room
 import com.habittap.app.data.dao.HabitDao
 import com.habittap.app.data.database.HabitDatabase
 import com.habittap.app.data.repository.HabitRepository
@@ -20,11 +19,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): HabitDatabase {
-        return Room.databaseBuilder(
-            context,
-            HabitDatabase::class.java,
-            "habittap.db"
-        ).fallbackToDestructiveMigration().build()
+        // Dùng chung 1 instance với widget để Flow của app nhận được thay đổi từ widget ngay lập tức
+        return HabitDatabase.getInstance(context)
     }
 
     @Provides

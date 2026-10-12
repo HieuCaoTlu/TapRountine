@@ -2,8 +2,7 @@ package com.habittap.app.widget
 
 import android.content.Context
 import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
+import com.habittap.app.triggerAndroidHaptic
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -22,8 +21,9 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.habittap.app.data.database.HabitDatabase
-import com.habittap.app.data.entity.HabitLogEntity
 import com.habittap.app.data.entity.HabitType
+import com.habittap.app.data.repository.HabitRepositoryImpl
+import com.habittap.app.data.repository.HabitTapLogic
 import java.time.LocalDate
 
 data class GlanceHabitItem(
@@ -52,17 +52,13 @@ class HabitGlanceWidget : GlanceAppWidget() {
         val items = allHabits.map { habit ->
             val log = database.habitDao().getLog(habit.id, today)
             val count = log?.count ?: 0
-            val isDone = when (habit.type) {
-                HabitType.ONE_TAP -> (log?.completed == true) || count >= 1
-                HabitType.N_TAP -> count >= habit.targetCount
-                HabitType.UNLIMITED -> count > 0
-            }
+            val isDone = HabitTapLogic.isCompleted(habit, count)
 
-            val status = when {
-                isDone -> "Xong"
-                habit.type == HabitType.ONE_TAP -> "Xong"
-                habit.type == HabitType.N_TAP -> "$count/${habit.targetCount}"
-                else -> "$count"
+            // Không dùng icon, streak chỉ ghi "[Số] Lần"
+            val status = when (habit.type) {
+                HabitType.ONE_TAP -> if (isDone) "Xong" else "Chưa xong"
+                HabitType.N_TAP -> "$count/${habit.targetCount} Lần"
+                HabitType.UNLIMITED -> "$count Lần"
             }
 
             GlanceHabitItem(
@@ -185,7 +181,7 @@ fun RowScope.HabitGlanceSlot(
         )
         Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
-            text = if (isDone) "✓ $statusText" else statusText,
+            text = statusText,
             style = TextStyle(
                 color = ColorProvider(if (isDone) Color(0xFF10B981) else Color(0xFFA3A3A3)),
                 fontSize = 9.sp,
@@ -200,42 +196,14 @@ class TapHabitActionCallback : ActionCallback {
         val habitId = parameters[HabitGlanceWidget.HabitIdKey] ?: return
         val database = HabitDatabase.getInstance(context)
         val habit = database.habitDao().getHabitById(habitId) ?: return
-        val today = LocalDate.now().toString()
-        val existingLog = database.habitDao().getLog(habitId, today)
-        val currentCount = existingLog?.count ?: 0
-        val wasCompleted = existingLog?.completed ?: false
+        val repository = HabitRepositoryImpl(database.habitDao())
 
-        val newCount = when (habit.type) {
-            HabitType.ONE_TAP -> if (wasCompleted || currentCount >= 1) 0 else 1
-            HabitType.N_TAP -> currentCount + 1
-            HabitType.UNLIMITED -> currentCount + 1
-        }
-
-        val newCompleted = when (habit.type) {
-            HabitType.ONE_TAP -> newCount >= 1
-            HabitType.N_TAP -> newCount >= habit.targetCount
-            HabitType.UNLIMITED -> newCount > 0
-        }
-
-        database.habitDao().upsertLog(
-            HabitLogEntity(
-                id = existingLog?.id ?: 0,
-                habitId = habitId,
-                date = today,
-                count = newCount,
-                completed = newCompleted
-            )
-        )
+        // Cùng logic với app (HabitTapLogic)
+        val justCompleted = HabitTapLogic.applyTap(repository, habit, LocalDate.now().toString())
 
         // Phản hồi rung CHỈ thực hiện khi bấm tap hoàn thành 1 habit
-        if (newCompleted && !wasCompleted) {
-            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator?.vibrate(120)
-            }
+        if (justCompleted) {
+            triggerAndroidHaptic(context, "heavy")
         }
 
         // Cập nhật widget lại ngay lập tức

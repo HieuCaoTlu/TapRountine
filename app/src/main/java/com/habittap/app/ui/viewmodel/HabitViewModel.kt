@@ -1,12 +1,18 @@
 package com.habittap.app.ui.viewmodel
 
+import android.content.Context
+import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.habittap.app.data.entity.HabitEntity
 import com.habittap.app.data.entity.HabitLogEntity
 import com.habittap.app.data.entity.HabitType
 import com.habittap.app.data.repository.HabitRepository
+import com.habittap.app.data.repository.HabitTapLogic
+import com.habittap.app.widget.HabitGlanceWidget
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -24,7 +30,8 @@ data class HabitUiState(
 
 @HiltViewModel
 class HabitViewModel @Inject constructor(
-    private val repository: HabitRepository
+    private val repository: HabitRepository,
+    @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
@@ -50,60 +57,29 @@ class HabitViewModel @Inject constructor(
         initialValue = HabitUiState(isLoading = true)
     )
 
+    init {
+        // Mọi thay đổi dữ liệu (từ app hoặc widget) -> làm mới widget để luôn khớp với app
+        viewModelScope.launch {
+            combine(
+                repository.getAllHabits(),
+                _selectedDate.flatMapLatest { date -> repository.getLogsForDate(date.toString()) }
+            ) { habits, logs -> habits to logs }
+                .collect { HabitGlanceWidget().updateAll(appContext) }
+        }
+
+        // Widget luôn dùng ngày hiện tại -> app cũng tự chuyển sang ngày mới khi qua nửa đêm
+        viewModelScope.launch {
+            while (true) {
+                delay(30_000)
+                val today = LocalDate.now()
+                if (_selectedDate.value != today) _selectedDate.value = today
+            }
+        }
+    }
+
     fun onHabitTapped(habit: HabitEntity, onCompleted: (() -> Unit)? = null) {
         viewModelScope.launch {
-            val dateStr = _selectedDate.value.toString()
-            val existingLog = repository.getLog(habit.id, dateStr)
-            var justCompleted = false
-
-            when (habit.type) {
-                HabitType.ONE_TAP -> {
-                    val newCompleted = !(existingLog?.completed ?: false)
-                    val newCount = if (newCompleted) 1 else 0
-                    if (newCompleted) justCompleted = true
-                    repository.upsertLog(
-                        HabitLogEntity(
-                            id = existingLog?.id ?: 0,
-                            habitId = habit.id,
-                            date = dateStr,
-                            count = newCount,
-                            completed = newCompleted
-                        )
-                    )
-                }
-                HabitType.N_TAP -> {
-                    val currentCount = existingLog?.count ?: 0
-                    val newCount = currentCount + 1
-                    val newCompleted = newCount >= habit.targetCount
-                    if (newCompleted && !(existingLog?.completed ?: false)) {
-                        justCompleted = true
-                    }
-                    repository.upsertLog(
-                        HabitLogEntity(
-                            id = existingLog?.id ?: 0,
-                            habitId = habit.id,
-                            date = dateStr,
-                            count = newCount,
-                            completed = newCompleted
-                        )
-                    )
-                }
-                HabitType.UNLIMITED -> {
-                    val currentCount = existingLog?.count ?: 0
-                    val newCount = currentCount + 1
-                    if (currentCount == 0) justCompleted = true
-                    repository.upsertLog(
-                        HabitLogEntity(
-                            id = existingLog?.id ?: 0,
-                            habitId = habit.id,
-                            date = dateStr,
-                            count = newCount,
-                            completed = true
-                        )
-                    )
-                }
-            }
-
+            val justCompleted = HabitTapLogic.applyTap(repository, habit, LocalDate.now().toString())
             if (justCompleted) {
                 onCompleted?.invoke()
             }
@@ -117,11 +93,7 @@ class HabitViewModel @Inject constructor(
             if (existingLog.count <= 0) return@launch
 
             val newCount = existingLog.count - 1
-            val newCompleted = when (habit.type) {
-                HabitType.ONE_TAP -> newCount >= 1
-                HabitType.N_TAP -> newCount >= habit.targetCount
-                HabitType.UNLIMITED -> newCount > 0
-            }
+            val newCompleted = HabitTapLogic.isCompleted(habit, newCount)
             repository.upsertLog(
                 existingLog.copy(count = newCount, completed = newCompleted)
             )

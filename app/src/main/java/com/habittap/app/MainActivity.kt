@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.habittap.app.data.entity.HabitEntity
 import com.habittap.app.data.entity.HabitType
+import com.habittap.app.data.repository.HabitTapLogic
 import com.habittap.app.ui.components.DayContribution
 import com.habittap.app.ui.components.GitHubCommitHeatmap
 import com.habittap.app.ui.viewmodel.HabitViewModel
@@ -53,10 +54,23 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private const val PREFS_NAME = "habit_settings"
+private const val KEY_VIBRATION = "vibration_enabled"
+
+fun isVibrationEnabled(context: Context): Boolean =
+    context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .getBoolean(KEY_VIBRATION, true)
+
+fun setVibrationEnabled(context: Context, enabled: Boolean) {
+    context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .edit().putBoolean(KEY_VIBRATION, enabled).apply()
+}
+
 /**
- * Rung mặc định của hệ thống
+ * Rung phản hồi khi hoàn thành thói quen (tôn trọng cài đặt "Rung" trong Settings).
  */
 fun triggerAndroidHaptic(context: Context, type: String = "default") {
+    if (!isVibrationEnabled(context)) return
     try {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
@@ -68,11 +82,23 @@ fun triggerAndroidHaptic(context: Context, type: String = "default") {
 
         if (!vibrator.hasVibrator()) return
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator.vibrate(50)
+        when {
+            // Android 10+: dùng hiệu ứng rung mặc định của hệ thống (giống phản hồi chạm gốc)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                val effectId = if (type == "medium") {
+                    VibrationEffect.EFFECT_CLICK
+                } else {
+                    VibrationEffect.EFFECT_HEAVY_CLICK
+                }
+                vibrator.vibrate(VibrationEffect.createPredefined(effectId))
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
+                vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+            }
+            else -> {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(30)
+            }
         }
     } catch (_: Exception) {
         // Fallback gracefully
@@ -301,8 +327,8 @@ fun HabitListScreen(
 ) {
     val completedHabits = remember(uiState.habits, uiState.todayLogs) {
         uiState.habits.filter { habit ->
-            val log = uiState.todayLogs[habit.id]
-            log?.completed == true
+            // Cùng công thức với widget: tính từ số lần chạm
+            HabitTapLogic.isCompleted(habit, uiState.todayLogs[habit.id]?.count ?: 0)
         }
     }
     val activeHabits = remember(uiState.habits, completedHabits) {
@@ -314,27 +340,25 @@ fun HabitListScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        // Sticky Header: Date + Day Name + View Mode Switcher
+        // Header đồng nhất với ProgressScreen/SettingsScreen (cao 48dp, title 20sp) + View Mode Switcher
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 14.dp),
+                .height(48.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.Center) {
                 Text(
-                    text = "${LocalDate.now().dayOfMonth} Tháng ${LocalDate.now().monthValue}",
-                    fontSize = 18.sp,
+                    text = "Thói quen",
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF171717)
                 )
                 Text(
-                    text = "Hôm nay",
-                    fontSize = 14.sp,
+                    text = "${LocalDate.now().dayOfMonth} Tháng ${LocalDate.now().monthValue}",
+                    fontSize = 12.sp,
+                    lineHeight = 14.sp,
                     color = Color(0xFF737373)
                 )
             }
@@ -569,7 +593,10 @@ fun ProgressScreen(
                     shape = RoundedCornerShape(16.dp),
                     color = Color.White,
                     shadowElevation = 1.dp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { onEditHabit(habit) }
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(
@@ -632,10 +659,6 @@ fun ProgressScreen(
                                         color = Color(0xFF737373)
                                     )
                                 }
-
-                                IconButton(onClick = { onEditHabit(habit) }) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Sửa", modifier = Modifier.size(18.dp))
-                                }
                             }
                         }
                     }
@@ -651,7 +674,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     var notificationsEnabled by remember { mutableStateOf(true) }
-    var vibrationEnabled by remember { mutableStateOf(true) }
+    var vibrationEnabled by remember { mutableStateOf(isVibrationEnabled(context)) }
     var soundEnabled by remember { mutableStateOf(true) }
     var reminderTime by remember { mutableStateOf("20:00") }
     var showTimeDialog by remember { mutableStateOf(false) }
@@ -740,6 +763,8 @@ fun SettingsScreen(
                         checked = vibrationEnabled,
                         onCheckedChange = {
                             vibrationEnabled = it
+                            setVibrationEnabled(context, it)
+                            if (it) triggerAndroidHaptic(context, "medium")
                         }
                     )
                 }

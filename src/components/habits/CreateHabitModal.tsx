@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Habit, HabitType } from '../../types';
 import { HABIT_ICONS_LIST, HabitIcon } from '../common/HabitIcon';
 import { useHabit } from '../../context/HabitContext';
-import { X, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Trash2, Check } from 'lucide-react';
+import { triggerHaptic } from '../../utils/audio';
 
 interface CreateHabitModalProps {
   isOpen: boolean;
@@ -19,22 +20,21 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
 }) => {
   const { deleteHabit } = useHabit();
 
-  const [title, setTitle] = useState(initialHabit?.title || '');
-  const [type, setType] = useState<HabitType>(initialHabit?.type || 'one_tap');
-  const [targetCount, setTargetCount] = useState<number>(initialHabit?.targetCount || 5);
-  const [icon, setIcon] = useState<string>(initialHabit?.icon || 'droplets');
-  const [category, setCategory] = useState<string>(initialHabit?.category || 'Sức khỏe');
-  const [reminderTime, setReminderTime] = useState<string>(initialHabit?.reminderTime || '');
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState<HabitType>('one_tap');
+  const [targetCount, setTargetCount] = useState<number>(5);
+  const [icon, setIcon] = useState<string>('droplets');
+  const [category, setCategory] = useState<string>('Sức khỏe');
+  const [reminderTime, setReminderTime] = useState<string>('');
   const [showIconPicker, setShowIconPicker] = useState<boolean>(false);
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
 
-  // Sync state if initialHabit changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialHabit) {
       setTitle(initialHabit.title);
       setType(initialHabit.type);
       setTargetCount(initialHabit.targetCount || 5);
-      setIcon(initialHabit.icon);
+      setIcon(initialHabit.icon || 'droplets');
       setCategory(initialHabit.category || 'Sức khỏe');
       setReminderTime(initialHabit.reminderTime || '');
     } else {
@@ -45,6 +45,8 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
       setCategory('Sức khỏe');
       setReminderTime('');
     }
+    setShowIconPicker(false);
+    setShowAdvanced(false);
   }, [initialHabit, isOpen]);
 
   if (!isOpen) return null;
@@ -53,6 +55,7 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
     e.preventDefault();
     if (!title.trim()) return;
 
+    triggerHaptic('medium');
     onSave({
       title: title.trim(),
       type,
@@ -65,64 +68,93 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
   };
 
   const handleDelete = () => {
-    if (initialHabit && window.confirm(`Xóa thói quen "${initialHabit.title}"?`)) {
+    if (!initialHabit) return;
+    if (window.confirm(`Bạn có chắc chắn muốn xóa thói quen "${initialHabit.title}"?`)) {
+      triggerHaptic('heavy');
       deleteHabit(initialHabit.id);
       onClose();
     }
   };
 
+  const selectedIconObj = HABIT_ICONS_LIST.find((item) => item.id === icon) || HABIT_ICONS_LIST[0];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-150">
-      <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in duration-150">
+      <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-[32px] sm:rounded-[32px] border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-center justify-between p-4 px-5 border-b border-neutral-100 dark:border-neutral-800 shrink-0">
           <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-            {initialHabit ? 'Sửa thói quen' : 'Tạo thói quen'}
+            {initialHabit ? 'Sửa thói quen' : 'Tạo thói quen mới'}
           </h3>
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
-          {/* Dòng 1 ở giữa: 1 hình vuông hiển thị biểu tượng, bấm vào để đổi */}
-          <div className="flex flex-col items-center justify-center">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+          {/* Biểu tượng thật (Real Lucide Vector Icon) - Bấm vào mở khay đổi icon trực quan */}
+          <div className="flex flex-col items-center justify-center pt-1 pb-1">
             <button
               type="button"
-              onClick={() => setShowIconPicker(!showIconPicker)}
-              className="w-18 h-18 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border-2 border-dashed border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-neutral-400 flex flex-col items-center justify-center text-neutral-900 dark:text-white transition-all group"
+              onClick={() => {
+                triggerHaptic('medium');
+                setShowIconPicker((prev) => !prev);
+              }}
+              className="group relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border-2 border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white transition-all active:scale-95 cursor-pointer shadow-2xs"
             >
-              <HabitIcon name={icon} className="w-7 h-7 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] text-neutral-400 mt-0.5">Đổi icon</span>
+              <div className="w-12 h-12 rounded-xl bg-white dark:bg-neutral-700 flex items-center justify-center text-neutral-900 dark:text-white shadow-xs group-hover:scale-105 transition-transform">
+                <HabitIcon name={icon} className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 mt-2 flex items-center gap-1">
+                <span>{selectedIconObj.label}</span>
+                <span className="text-[10px] text-neutral-400 underline">Đổi icon</span>
+              </span>
             </button>
 
-            {/* Icon picker grid */}
+            {/* Khay chọn biểu tượng Vector Thật (Hoàn toàn icon thật, không emoji) */}
             {showIconPicker && (
-              <div className="mt-3 w-full p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 animate-in fade-in">
-                <div className="text-[11px] font-semibold text-neutral-500 mb-2">Chọn biểu tượng:</div>
-                <div className="grid grid-cols-6 sm:grid-cols-7 gap-2 max-h-44 overflow-y-auto custom-scrollbar p-1">
-                  {HABIT_ICONS_LIST.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setIcon(item.id);
-                        setShowIconPicker(false);
-                      }}
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                        icon === item.id
-                          ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
-                          : 'bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                      }`}
-                      title={item.label}
-                    >
-                      <item.icon className="w-4 h-4" />
-                    </button>
-                  ))}
+              <div className="mt-3 w-full p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/90 border border-neutral-200 dark:border-neutral-700 shadow-inner animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between text-xs font-bold text-neutral-700 dark:text-neutral-200 mb-2.5 px-1">
+                  <span>Kho biểu tượng thật (34+ icon):</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowIconPicker(false)}
+                    className="text-[11px] text-neutral-500 hover:text-neutral-900 dark:hover:text-white font-medium cursor-pointer"
+                  >
+                    Đóng
+                  </button>
+                </div>
+                <div className="grid grid-cols-6 gap-2 max-h-52 overflow-y-auto custom-scrollbar p-1">
+                  {HABIT_ICONS_LIST.map((item) => {
+                    const isSelected = icon === item.id;
+                    const IconComponent = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          triggerHaptic('heavy');
+                          setIcon(item.id);
+                          setShowIconPicker(false);
+                        }}
+                        className={`h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-md ring-2 ring-neutral-900 dark:ring-white scale-105'
+                            : 'bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                        }`}
+                        title={item.label}
+                      >
+                        <IconComponent className="w-5 h-5 stroke-[2]" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -138,12 +170,12 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="VD: Uống nước, Đọc sách..."
+              placeholder="VD: Uống nước, Đọc sách, Tập gym..."
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white text-sm"
             />
           </div>
 
-          {/* Chế độ Tab: One Tap, Counter Tab, Streak Tab */}
+          {/* Chế độ Tab: One Tap, Counter Tab, Streak Tab (Màu app tối giản monochrome, không dùng màu hệ thống) */}
           <div>
             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
               Chế độ Tab
@@ -151,11 +183,14 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => setType('one_tap')}
-                className={`py-2.5 px-3 rounded-xl border text-center font-medium text-xs transition-all ${
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setType('one_tap');
+                }}
+                className={`py-2.5 px-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
                   type === 'one_tap'
-                    ? 'border-neutral-900 dark:border-white bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
-                    : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-neutral-900 dark:border-white shadow-xs'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border-neutral-200/80 dark:border-neutral-700 hover:bg-neutral-200/80 dark:hover:bg-neutral-700'
                 }`}
               >
                 One Tap
@@ -163,11 +198,14 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
 
               <button
                 type="button"
-                onClick={() => setType('n_tap')}
-                className={`py-2.5 px-3 rounded-xl border text-center font-medium text-xs transition-all ${
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setType('n_tap');
+                }}
+                className={`py-2.5 px-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
                   type === 'n_tap'
-                    ? 'border-neutral-900 dark:border-white bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
-                    : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-neutral-900 dark:border-white shadow-xs'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border-neutral-200/80 dark:border-neutral-700 hover:bg-neutral-200/80 dark:hover:bg-neutral-700'
                 }`}
               >
                 Counter Tab
@@ -175,11 +213,14 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
 
               <button
                 type="button"
-                onClick={() => setType('unlimited')}
-                className={`py-2.5 px-3 rounded-xl border text-center font-medium text-xs transition-all ${
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setType('unlimited');
+                }}
+                className={`py-2.5 px-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
                   type === 'unlimited'
-                    ? 'border-neutral-900 dark:border-white bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
-                    : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-neutral-900 dark:border-white shadow-xs'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border-neutral-200/80 dark:border-neutral-700 hover:bg-neutral-200/80 dark:hover:bg-neutral-700'
                 }`}
               >
                 Streak Tab
@@ -189,15 +230,18 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
 
           {/* Số lần mục tiêu nếu là Counter Tab */}
           {type === 'n_tap' && (
-            <div>
+            <div className="p-3 bg-neutral-50 dark:bg-neutral-800/60 rounded-xl border border-neutral-200/60 dark:border-neutral-700">
               <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                Số lần mục tiêu
+                Số lần mục tiêu trong ngày
               </label>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setTargetCount((prev) => Math.max(2, prev - 1))}
-                  className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center font-bold text-base text-neutral-800 dark:text-neutral-200"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setTargetCount((prev) => Math.max(2, prev - 1));
+                  }}
+                  className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 flex items-center justify-center font-bold text-base text-neutral-900 dark:text-white cursor-pointer active:scale-95"
                 >
                   -
                 </button>
@@ -206,29 +250,35 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
                 </span>
                 <button
                   type="button"
-                  onClick={() => setTargetCount((prev) => Math.min(100, prev + 1))}
-                  className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center font-bold text-base text-neutral-800 dark:text-neutral-200"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setTargetCount((prev) => Math.min(100, prev + 1));
+                  }}
+                  className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 flex items-center justify-center font-bold text-base text-neutral-900 dark:text-white cursor-pointer active:scale-95"
                 >
                   +
                 </button>
-                <span className="text-xs text-neutral-400">lần/ngày</span>
+                <span className="text-xs text-neutral-400 font-medium">lần/ngày</span>
               </div>
             </div>
           )}
 
-          {/* PHần danh mục và nhắc nhở để ẩn lại thành tùy chọn nâng cao */}
+          {/* Tùy chọn nâng cao (Danh mục & Giờ nhắc nhở) */}
           <div className="pt-1 border-t border-neutral-100 dark:border-neutral-800">
             <button
               type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center justify-between w-full text-xs font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 py-1"
+              onClick={() => {
+                triggerHaptic('light');
+                setShowAdvanced(!showAdvanced);
+              }}
+              className="flex items-center justify-between w-full text-xs font-semibold text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 py-1 cursor-pointer"
             >
-              <span>Tùy chọn nâng cao</span>
+              <span>Tùy chọn nâng cao (Danh mục & Nhắc nhở)</span>
               {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
 
             {showAdvanced && (
-              <div className="grid grid-cols-2 gap-3 pt-2 animate-in fade-in">
+              <div className="grid grid-cols-2 gap-3 pt-2 animate-in fade-in duration-150">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                     Danh mục
@@ -262,21 +312,21 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
             )}
           </div>
 
-          {/* Actions */}
-          <div className="pt-2 flex items-center gap-2">
+          {/* Action Buttons: Nút XÓA thói quen rõ ràng và Nút Lưu */}
+          <div className="pt-3 flex flex-col sm:flex-row items-center gap-2.5">
             {initialHabit && (
               <button
                 type="button"
                 onClick={handleDelete}
-                className="py-3 px-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 flex items-center justify-center transition-colors"
-                title="Xóa thói quen"
+                className="w-full sm:w-auto py-3 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/50 flex items-center justify-center gap-2 text-xs font-bold transition-colors cursor-pointer shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
+                <span>Xóa thói quen</span>
               </button>
             )}
             <button
               type="submit"
-              className="flex-1 py-3 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold transition-transform active:scale-98"
+              className="w-full flex-1 py-3 px-5 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-xs font-bold transition-transform active:scale-98 cursor-pointer shadow-sm text-center"
             >
               {initialHabit ? 'Lưu thay đổi' : 'Tạo thói quen'}
             </button>

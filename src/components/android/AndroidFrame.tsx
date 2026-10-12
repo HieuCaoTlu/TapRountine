@@ -9,6 +9,7 @@ import {
   BatteryCharging,
 } from 'lucide-react';
 import { CreateHabitModal } from '../habits/CreateHabitModal';
+import { triggerHaptic } from '../../utils/audio';
 
 interface AndroidFrameProps {
   children: React.ReactNode;
@@ -54,10 +55,13 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
 
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setActiveTab('widgets')}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+            onClick={() => {
+              triggerHaptic('light');
+              setActiveTab('widgets');
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'widgets'
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
                 : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/50 dark:hover:bg-neutral-800'
             }`}
           >
@@ -65,10 +69,13 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
           </button>
 
           <button
-            onClick={() => setActiveTab('kotlin_code')}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+            onClick={() => {
+              triggerHaptic('light');
+              setActiveTab('kotlin_code');
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'kotlin_code'
-                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
+                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
                 : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/50 dark:hover:bg-neutral-800'
             }`}
           >
@@ -90,67 +97,79 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
           </div>
         </div>
 
-        {/* Content Body */}
+        {/* Content Body with slide animation on menu change */}
         <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-          {children}
+          <div key={activeTab} className="animate-menu-slide">
+            {children}
+          </div>
         </div>
 
-        {/* Floating Menu & Circular Add Button (Space between về 2 phía) */}
-        <div className="pointer-events-none sticky bottom-5 left-0 right-0 z-40 px-5 flex items-center justify-between">
-          {/* Thanh menu bo tròn hoàn toàn (rounded-full), chỉ hiển thị icon */}
+        {/* Floating Menu & Circular Add Button (Rộng hơn 20%, bo tròn hoàn toàn) */}
+        <div className="pointer-events-none sticky bottom-5 left-0 right-0 z-40 px-4 flex items-center justify-between gap-3">
+          {/* Thanh menu bo tròn nổi bồng bềnh, các nút menu mở rộng 20% (w-[68px]) */}
           <nav
-            className="pointer-events-auto bg-white/90 dark:bg-neutral-900/90 backdrop-blur-2xl border border-neutral-200/90 dark:border-neutral-800 shadow-xl rounded-full p-1.5 flex items-center gap-1"
+            className="pointer-events-auto bg-white/95 dark:bg-neutral-900/95 backdrop-blur-2xl border border-neutral-200/90 dark:border-neutral-800 shadow-xl rounded-full p-2 flex items-center gap-1.5"
             role="navigation"
             aria-label="Điều hướng chính"
           >
             {/* Menu 1: Thói quen */}
             <button
-              onClick={() => setActiveTab('habits')}
+              onClick={() => {
+                triggerHaptic('light');
+                setActiveTab('habits');
+              }}
               title="Thói quen"
-              className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+              className={`w-[66px] h-12 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 activeTab === 'habits'
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs scale-105'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
-              <CheckCircle2 className="w-5 h-5 stroke-[2]" />
+              <CheckCircle2 className="w-5 h-5 stroke-[2.2]" />
             </button>
 
             {/* Menu 2: Tiến độ */}
             <button
-              onClick={() => setActiveTab('stats')}
+              onClick={() => {
+                triggerHaptic('light');
+                setActiveTab('stats');
+              }}
               title="Tiến độ"
-              className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+              className={`w-[66px] h-12 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 activeTab === 'stats'
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs scale-105'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
-              <BarChart3 className="w-5 h-5 stroke-[2]" />
+              <BarChart3 className="w-5 h-5 stroke-[2.2]" />
             </button>
 
             {/* Menu 3: Cài đặt */}
             <button
-              onClick={() => setActiveTab('settings')}
+              onClick={() => {
+                triggerHaptic('light');
+                setActiveTab('settings');
+              }}
               title="Cài đặt"
-              className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+              className={`w-[66px] h-12 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 activeTab === 'settings'
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs scale-105'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
-              <Settings className="w-5 h-5 stroke-[2]" />
+              <Settings className="w-5 h-5 stroke-[2.2]" />
             </button>
           </nav>
 
-          {/* Nút thêm thói quen hình tròn nằm bên phải menu nổi, phong cách iPhone */}
+          {/* Nút thêm thói quen hình tròn nằm bên phải (rộng và đã tay) */}
           <button
             onClick={() => {
+              triggerHaptic('heavy');
               setEditingHabit(null);
               setIsCreateModalOpen(true);
             }}
             title="Thêm thói quen mới"
-            className="pointer-events-auto w-12 h-12 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all shrink-0"
+            className="pointer-events-auto w-14 h-14 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer"
           >
             <Plus className="w-6 h-6 stroke-[2.5]" />
           </button>

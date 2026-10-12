@@ -15,6 +15,7 @@ interface HabitRepository {
     suspend fun insertHabit(habit: HabitEntity): Long
     suspend fun updateHabit(habit: HabitEntity)
     suspend fun deleteHabit(habitId: Long)
+    suspend fun clearAllData()
 }
 
 @Singleton
@@ -28,4 +29,8 @@ class HabitRepositoryImpl @Inject constructor(
     override suspend fun insertHabit(habit: HabitEntity): Long = dao.insertHabit(habit)
     override suspend fun updateHabit(habit: HabitEntity) = dao.updateHabit(habit)
     override suspend fun deleteHabit(habitId: Long) = dao.deleteHabit(habitId)
+    override suspend fun clearAllData() {
+        dao.clearAllHabits()
+        dao.clearAllLogs()
+    }
 }

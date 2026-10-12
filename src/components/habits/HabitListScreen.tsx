@@ -3,6 +3,7 @@ import { useHabit } from '../../context/HabitContext';
 import { HabitCard } from './HabitCard';
 import { Habit } from '../../types';
 import { getTodayString, formatDateToLocal } from '../../utils/date';
+import { triggerHaptic } from '../../utils/audio';
 import { ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
 
 export const HabitListScreen: React.FC = () => {
@@ -23,6 +24,7 @@ export const HabitListScreen: React.FC = () => {
   const isToday = selectedDate === todayStr;
 
   const handlePrevDay = () => {
+    triggerHaptic('light');
     const cur = new Date(selectedDate + 'T00:00:00');
     cur.setDate(cur.getDate() - 1);
     const y = cur.getFullYear();
@@ -32,6 +34,7 @@ export const HabitListScreen: React.FC = () => {
   };
 
   const handleNextDay = () => {
+    triggerHaptic('light');
     const cur = new Date(selectedDate + 'T00:00:00');
     cur.setDate(cur.getDate() + 1);
     const y = cur.getFullYear();
@@ -84,50 +87,59 @@ export const HabitListScreen: React.FC = () => {
   return (
     <div className="space-y-4 pb-28">
       {/* Date Navigation: Navigation 2 bên, ở giữa ghi đúng Hôm nay hoặc ngày cụ thể */}
-      <div className="flex items-center justify-between py-2 px-1">
+      <div className="flex items-center justify-between py-1 px-1">
         <button
           onClick={handlePrevDay}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           title="Ngày trước"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
 
         <button
-          onClick={() => setSelectedDate(todayStr)}
-          className="text-base font-bold text-neutral-900 dark:text-neutral-100 hover:opacity-80 transition-opacity"
+          onClick={() => {
+            triggerHaptic('light');
+            setSelectedDate(todayStr);
+          }}
+          className="text-base font-bold text-neutral-900 dark:text-neutral-100 hover:opacity-80 transition-opacity cursor-pointer"
         >
           {isToday ? 'Hôm nay' : formatDateToLocal(selectedDate)}
         </button>
 
         <button
           onClick={handleNextDay}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           title="Ngày sau"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Sub-header: View Mode Switcher (Tất cả vs Theo danh mục) */}
+      {/* Sub-header: View Mode Switcher (Tất cả vs Theo danh mục) - Mượt mà không giật khựng */}
       <div className="flex items-center justify-between gap-2 pt-0.5">
-        <div className="flex items-center p-1 bg-neutral-200/60 dark:bg-neutral-800 rounded-full text-xs font-semibold">
+        <div className="relative flex items-center p-1 bg-neutral-200/70 dark:bg-neutral-800 rounded-full text-xs font-semibold select-none">
           <button
-            onClick={() => setViewMode('all')}
-            className={`px-3 py-1 rounded-full transition-all ${
+            onClick={() => {
+              triggerHaptic('light');
+              setViewMode('all');
+            }}
+            className={`relative z-10 px-3.5 py-1.5 rounded-full transition-colors duration-150 cursor-pointer ${
               viewMode === 'all'
-                ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-2xs'
-                : 'text-neutral-600 dark:text-neutral-400'
+                ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-xs font-bold'
+                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white font-medium'
             }`}
           >
             Tất cả
           </button>
           <button
-            onClick={() => setViewMode('grouped')}
-            className={`px-3 py-1 rounded-full transition-all ${
+            onClick={() => {
+              triggerHaptic('light');
+              setViewMode('grouped');
+            }}
+            className={`relative z-10 px-3.5 py-1.5 rounded-full transition-colors duration-150 cursor-pointer ${
               viewMode === 'grouped'
-                ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-2xs'
-                : 'text-neutral-600 dark:text-neutral-400'
+                ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-xs font-bold'
+                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white font-medium'
             }`}
           >
             Theo danh mục
@@ -135,78 +147,83 @@ export const HabitListScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Habit Cards Feed */}
-      {viewMode === 'all' ? (
-        <div className="space-y-2.5">
-          {activeHabits.length === 0 ? (
-            <div className="p-8 text-center bg-white dark:bg-neutral-900 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800">
-              <p className="text-xs text-neutral-500">
-                {completedHabits.length > 0
-                  ? 'Tuyệt vời! Bạn đã hoàn thành tất cả thói quen cho hôm nay.'
-                  : 'Chưa có thói quen nào. Bấm nút "+" ở dưới để tạo mới.'}
-              </p>
-            </div>
-          ) : (
-            activeHabits.map((habit) => (
-              <HabitCard
-                key={habit.id}
-                habit={habit}
-                log={getHabitLogForDate(habit.id, selectedDate)}
-                onTap={() => tapHabit(habit.id, selectedDate)}
-                onEdit={() => {
-                  setEditingHabit(habit);
-                  setIsCreateModalOpen(true);
-                }}
-              />
-            ))
-          )}
-        </div>
-      ) : (
-        /* Grouped by Categories */
-        <div className="space-y-4">
-          {groupedCategories.length === 0 ? (
-            <div className="p-8 text-center bg-white dark:bg-neutral-900 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800">
-              <p className="text-xs text-neutral-500">Không có thói quen nào cần hoàn thành.</p>
-            </div>
-          ) : (
-            groupedCategories.map(([category, list]) => (
-              <div key={category} className="space-y-2">
-                <div className="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">
-                  {category}
-                </div>
-                <div className="space-y-2.5">
-                  {list.map((habit) => (
-                    <HabitCard
-                      key={habit.id}
-                      habit={habit}
-                      log={getHabitLogForDate(habit.id, selectedDate)}
-                      onTap={() => tapHabit(habit.id, selectedDate)}
-                      onEdit={() => {
-                        setEditingHabit(habit);
-                        setIsCreateModalOpen(true);
-                      }}
-                    />
-                  ))}
-                </div>
+      {/* Habit Cards Feed - Chuyển động mượt mà không khựng */}
+      <div className="transition-opacity duration-150">
+        {viewMode === 'all' ? (
+          <div className="space-y-2.5">
+            {activeHabits.length === 0 ? (
+              <div className="p-8 text-center bg-white dark:bg-neutral-900 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800">
+                <p className="text-xs text-neutral-500">
+                  {completedHabits.length > 0
+                    ? 'Tuyệt vời! Bạn đã hoàn thành tất cả thói quen cho hôm nay.'
+                    : 'Chưa có thói quen nào. Bấm nút "+" ở dưới để tạo mới.'}
+                </p>
               </div>
-            ))
-          )}
-        </div>
-      )}
+            ) : (
+              activeHabits.map((habit) => (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  log={getHabitLogForDate(habit.id, selectedDate)}
+                  onTap={() => tapHabit(habit.id, selectedDate)}
+                  onEdit={() => {
+                    setEditingHabit(habit);
+                    setIsCreateModalOpen(true);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        ) : (
+          /* Grouped by Categories */
+          <div className="space-y-4">
+            {groupedCategories.length === 0 ? (
+              <div className="p-8 text-center bg-white dark:bg-neutral-900 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800">
+                <p className="text-xs text-neutral-500">Không có thói quen nào cần hoàn thành.</p>
+              </div>
+            ) : (
+              groupedCategories.map(([category, list]) => (
+                <div key={category} className="space-y-2">
+                  <div className="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">
+                    {category}
+                  </div>
+                  <div className="space-y-2.5">
+                    {list.map((habit) => (
+                      <HabitCard
+                        key={habit.id}
+                        habit={habit}
+                        log={getHabitLogForDate(habit.id, selectedDate)}
+                        onTap={() => tapHabit(habit.id, selectedDate)}
+                        onEdit={() => {
+                          setEditingHabit(habit);
+                          setIsCreateModalOpen(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Nút "Xem đã hoàn thành" căn giữa và cho mờ mờ */}
       {completedHabits.length > 0 && (
         <div className="pt-3 flex flex-col items-center justify-center">
           <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 py-1 px-3 transition-opacity opacity-40 hover:opacity-90"
+            onClick={() => {
+              triggerHaptic('light');
+              setShowCompleted(!showCompleted);
+            }}
+            className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 py-1 px-3 transition-opacity opacity-50 hover:opacity-90 cursor-pointer"
           >
             {showCompleted ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             <span>Đã hoàn thành ({completedHabits.length})</span>
           </button>
 
           {showCompleted && (
-            <div className="w-full space-y-2 mt-3 opacity-60 hover:opacity-100 transition-opacity">
+            <div className="w-full space-y-2.5 mt-3 opacity-60 hover:opacity-100 transition-opacity">
               {completedHabits.map((habit) => (
                 <HabitCard
                   key={habit.id}

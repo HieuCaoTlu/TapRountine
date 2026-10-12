@@ -45,3 +45,18 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes slideMenuIn {
+  0% {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-menu-slide {
+  animation: slideMenuIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

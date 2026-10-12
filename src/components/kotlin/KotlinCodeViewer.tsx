@@ -362,31 +362,59 @@ class HabitGlanceWidget : GlanceAppWidget() {
                     .background(ColorProvider(Color(0xFF171717)))
                     .padding(12.dp)
             ) {
-                Text(
-                    text = "HabitTap Quick Widget",
-                    style = TextStyle(color = ColorProvider(Color.White), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                )
-                Spacer(modifier = GlanceModifier.height(8.dp))
+                // Header 4x2
                 Row(
-                    modifier = GlanceModifier
-                        .fillMaxWidth()
-                        .background(ColorProvider(Color(0xFF262626)))
-                        .padding(8.dp)
-                        .clickable(actionRunCallback<TapHabitActionCallback>()),
+                    modifier = GlanceModifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "💧 Uống nước",
-                        style = TextStyle(color = ColorProvider(Color.White), fontSize = 14.sp)
+                        text = "HabitTap (4x2)",
+                        style = TextStyle(color = ColorProvider(Color.White), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     )
                     Spacer(modifier = GlanceModifier.defaultWeight())
                     Text(
-                        text = "+ Tab",
-                        style = TextStyle(color = ColorProvider(Color.White), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        text = "Hôm nay",
+                        style = TextStyle(color = ColorProvider(Color(0xFFA3A3A3)), fontSize = 10.sp)
                     )
+                }
+
+                Spacer(modifier = GlanceModifier.height(8.dp))
+
+                // Dòng 4 ô thói quen trong cùng 1 hàng ngang
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    HabitGlanceSlot("Nước", "3/8", false, 1L)
+                    Spacer(modifier = GlanceModifier.width(6.dp))
+                    HabitGlanceSlot("Sách", "Xong", true, 2L)
+                    Spacer(modifier = GlanceModifier.width(6.dp))
+                    HabitGlanceSlot("Gym", "Tab", false, 3L)
+                    Spacer(modifier = GlanceModifier.width(6.dp))
+                    HabitGlanceSlot("Ngủ", "Tab", false, 4L)
                 }
             }
         }
+    }
+}
+
+@Composable
+fun RowScope.HabitGlanceSlot(title: String, count: String, isDone: Boolean, habitId: Long) {
+    val habitParamKey = ActionParameters.Key<Long>("habitId")
+    val bgColor = if (isDone) Color(0xFF262626) else Color(0xFF202020)
+    Column(
+        modifier = GlanceModifier
+            .defaultWeight()
+            .height(72.dp)
+            .background(ColorProvider(bgColor))
+            .padding(6.dp)
+            .clickable(actionRunCallback<TapHabitActionCallback>(actionParametersOf(habitParamKey to habitId))),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = title, style = TextStyle(color = ColorProvider(Color.White), fontSize = 11.sp, fontWeight = FontWeight.Bold))
+        Spacer(modifier = GlanceModifier.height(4.dp))
+        Text(text = if (isDone) "✓ $count" else "+ $count", style = TextStyle(color = ColorProvider(if (isDone) Color(0xFF10B981) else Color(0xFFA3A3A3)), fontSize = 9.sp))
     }
 }
 

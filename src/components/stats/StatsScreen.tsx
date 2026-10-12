@@ -141,9 +141,9 @@ export const StatsScreen: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-28">
-      {/* Title đơn giản đúng 1 chữ: Tiến độ */}
-      <div className="py-2 px-1">
-        <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
+      {/* Title đơn giản đúng 1 chữ: Tiến độ, chiều cao h-11 chuẩn đồng nhất */}
+      <div className="h-11 flex items-center px-1">
+        <h2 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
           Tiến độ
         </h2>
       </div>

@@ -137,4 +137,10 @@ class HabitViewModel @Inject constructor(
             repository.deleteHabit(habitId)
         }
     }
+
+    fun clearAllData() {
+        viewModelScope.launch {
+            repository.clearAllData()
+        }
+    }
 }

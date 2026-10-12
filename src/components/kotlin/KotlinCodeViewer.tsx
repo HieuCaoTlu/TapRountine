@@ -519,7 +519,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Setup Gradle
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.7'
@@ -531,9 +531,9 @@ jobs:
           if [ -n "$PROJECT_DIR" ]; then
             cd "$PROJECT_DIR"
           fi
-          # Tạo gradlew với phiên bản Gradle 8.7 tương thích AGP và Kotlin
+          # Tạo gradlew version 8.7 nếu chưa có trong kho lưu trữ
           if [ ! -f "./gradlew" ]; then
-            echo "gradlew not found, generating Gradle 8.7 wrapper..."
+            echo "Generating Gradle 8.7 wrapper..."
             gradle wrapper --gradle-version 8.7 || true
           fi
           if [ -f "./gradlew" ]; then

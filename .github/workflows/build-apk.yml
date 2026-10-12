@@ -18,25 +18,28 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
+      # Cố định phiên bản Gradle 8.7 (Gradle 9.x không tương thích với KAPT/Android Plugin)
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
 
       - name: Build Debug APK
         run: |
-          # 1. Tìm thư mục chứa settings.gradle.kts nếu bị nằm trong thư mục con
+          # 1. Tìm thư mục chứa settings.gradle.kts nếu bị đẩy vào thư mục con
           PROJECT_DIR=$(find . -name "settings.gradle.kts" -exec dirname {} \; | head -n 1)
           if [ -n "$PROJECT_DIR" ]; then
             echo "Found project at: $PROJECT_DIR"
             cd "$PROJECT_DIR"
           fi
 
-          # 2. Tạo gradlew nếu chưa có trong repo
+          # 2. Tạo gradlew version 8.7 nếu chưa có
           if [ ! -f "./gradlew" ]; then
-            echo "gradlew not found, generating wrapper..."
-            gradle wrapper || true
+            echo "Generating Gradle 8.7 wrapper..."
+            gradle wrapper --gradle-version 8.7 || true
           fi
 
-          # 3. Chạy build APK
+          # 3. Build APK
           if [ -f "./gradlew" ]; then
             chmod +x gradlew
             ./gradlew assembleDebug --stacktrace

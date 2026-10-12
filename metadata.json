@@ -1,0 +1,6 @@
+{
+  "name": "HabitTap - Android MVVM Habit Tracker",
+  "description": "Ứng dụng theo dõi thói quen chuẩn Android Native kiến trúc MVVM, biểu đồ commit routine GitHub và Android Widgets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

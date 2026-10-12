@@ -398,6 +398,34 @@ class TapHabitActionCallback : ActionCallback {
 `,
   },
   {
+    name: 'MainActivity.kt',
+    category: 'Jetpack Compose UI',
+    description: 'Giao diện chính: Habit list, Tiến độ routine heatmap, Cài đặt và Menu nổi',
+    relativePath: 'app/src/main/java/com/habittap/app/MainActivity.kt',
+    code: `package com.habittap.app
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            HabitTapTheme {
+                HabitTapApp()
+            }
+        }
+    }
+}
+`,
+  },
+  {
     name: 'AndroidManifest.xml',
     category: 'Android Manifest',
     description: 'Cấu hình quyền và receiver cho Widget Android',

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -254,7 +255,7 @@ fun HabitListScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = {}) {
-                Icon(Icons.Default.ChevronLeft, contentDescription = "Trước")
+                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Trước")
             }
             Text(
                 text = "Hôm nay",
@@ -263,7 +264,7 @@ fun HabitListScreen(
                 color = Color(0xFF171717)
             )
             IconButton(onClick = {}) {
-                Icon(Icons.Default.ChevronRight, contentDescription = "Sau")
+                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Sau")
             }
         }
 

@@ -1,4 +1,4 @@
-package com.habittap.app.MainActivity
+package com.habittap.app
 
 import android.content.Context
 import android.os.Build
@@ -292,7 +292,15 @@ fun HabitTapApp(viewModel: HabitViewModel = viewModel()) {
                 onSave = { title, type, target, icon, cat ->
                     triggerAndroidHaptic(context, "heavy")
                     if (editingHabit != null) {
-                        viewModel.insertHabit(title, type, target, icon, cat)
+                        viewModel.updateHabit(
+                            editingHabit!!.copy(
+                                title = title,
+                                type = type,
+                                targetCount = target,
+                                icon = icon,
+                                category = cat
+                            )
+                        )
                     } else {
                         viewModel.insertHabit(title, type, target, icon, cat)
                     }

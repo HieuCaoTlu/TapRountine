@@ -132,6 +132,12 @@ class HabitViewModel @Inject constructor(
         }
     }
 
+    fun updateHabit(habit: HabitEntity) {
+        viewModelScope.launch {
+            repository.updateHabit(habit)
+        }
+    }
+
     fun deleteHabit(habitId: Long) {
         viewModelScope.launch {
             repository.deleteHabit(habitId)

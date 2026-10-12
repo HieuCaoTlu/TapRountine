@@ -55,7 +55,6 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
     e.preventDefault();
     if (!title.trim()) return;
 
-    triggerHaptic('medium');
     onSave({
       title: title.trim(),
       type,
@@ -70,7 +69,6 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
   const handleDelete = () => {
     if (!initialHabit) return;
     if (window.confirm(`Bạn có chắc chắn muốn xóa thói quen "${initialHabit.title}"?`)) {
-      triggerHaptic('heavy');
       deleteHabit(initialHabit.id);
       onClose();
     }
@@ -97,67 +95,43 @@ export const CreateHabitModal: React.FC<CreateHabitModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1">
-          {/* Biểu tượng thật (Real Lucide Vector Icon) - Bấm vào mở khay đổi icon trực quan */}
-          <div className="flex flex-col items-center justify-center pt-1 pb-1">
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('medium');
-                setShowIconPicker((prev) => !prev);
-              }}
-              className="group relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-neutral-100 dark:bg-neutral-800 border-2 border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white transition-all active:scale-95 cursor-pointer shadow-2xs"
-            >
-              <div className="w-12 h-12 rounded-xl bg-white dark:bg-neutral-700 flex items-center justify-center text-neutral-900 dark:text-white shadow-xs group-hover:scale-105 transition-transform">
-                <HabitIcon name={icon} className="w-6 h-6 stroke-[2.2]" />
-              </div>
-              <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 mt-2 flex items-center gap-1">
-                <span>{selectedIconObj.label}</span>
-                <span className="text-[10px] text-neutral-400 underline">Đổi icon</span>
-              </span>
-            </button>
+          {/* Biểu tượng Vector Thật (34+ icon phong phú) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                Biểu tượng thói quen: <span className="font-bold text-neutral-900 dark:text-white">{selectedIconObj.label}</span>
+              </label>
+              <span className="text-[11px] text-neutral-400">Chọn 1 trong 35 icon</span>
+            </div>
 
-            {/* Khay chọn biểu tượng Vector Thật (Hoàn toàn icon thật, không emoji) */}
-            {showIconPicker && (
-              <div className="mt-3 w-full p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/90 border border-neutral-200 dark:border-neutral-700 shadow-inner animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between text-xs font-bold text-neutral-700 dark:text-neutral-200 mb-2.5 px-1">
-                  <span>Kho biểu tượng thật (34+ icon):</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowIconPicker(false)}
-                    className="text-[11px] text-neutral-500 hover:text-neutral-900 dark:hover:text-white font-medium cursor-pointer"
-                  >
-                    Đóng
-                  </button>
-                </div>
-                <div className="grid grid-cols-6 gap-2 max-h-52 overflow-y-auto custom-scrollbar p-1">
-                  {HABIT_ICONS_LIST.map((item) => {
-                    const isSelected = icon === item.id;
-                    const IconComponent = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          triggerHaptic('heavy');
-                          setIcon(item.id);
-                          setShowIconPicker(false);
-                        }}
-                        className={`h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-md ring-2 ring-neutral-900 dark:ring-white scale-105'
-                            : 'bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-600'
-                        }`}
-                        title={item.label}
-                      >
-                        <IconComponent className="w-5 h-5 stroke-[2]" />
-                      </button>
-                    );
-                  })}
-                </div>
+            {/* Khay chọn biểu tượng Vector Thật dạng lưới cuộn mượt */}
+            <div className="p-2.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700">
+              <div className="grid grid-cols-7 gap-2 max-h-44 overflow-y-auto custom-scrollbar p-1">
+                {HABIT_ICONS_LIST.map((item) => {
+                  const isSelected = icon === item.id;
+                  const IconComponent = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIcon(item.id);
+                      }}
+                      className={`h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-md ring-2 ring-neutral-900 dark:ring-white scale-105'
+                          : 'bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                      }`}
+                      title={item.label}
+                    >
+                      <IconComponent className="w-5 h-5 stroke-[2]" />
+                    </button>
+                  );
+                })}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Tên thói quen */}

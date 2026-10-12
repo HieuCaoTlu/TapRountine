@@ -33,7 +33,6 @@ fun GitHubCommitHeatmap(
                 week.forEach { day ->
                     val cellColor = when {
                         day.taps == 0 -> Color(0xFFF1F5F9)
-                        habitType == HabitType.ONE_TAP -> Color(0xFF171717)
                         day.taps >= 8 -> Color(0xFF171717)
                         day.taps >= 5 -> Color(0xFF404040)
                         day.taps >= 2 -> Color(0xFF737373)
@@ -47,11 +46,11 @@ fun GitHubCommitHeatmap(
                             .background(cellColor),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (habitType != HabitType.ONE_TAP && day.taps > 0) {
+                        if (day.taps > 0) {
                             Text(
                                 text = if (day.taps > 9) "9+" else day.taps.toString(),
                                 color = Color.White,
-                                fontSize = 9.sp,
+                                fontSize = 8.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }

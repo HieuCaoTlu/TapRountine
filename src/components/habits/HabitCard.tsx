@@ -28,7 +28,6 @@ export const HabitCard: React.FC<HabitCardProps> = ({
     isLongPressTriggered.current = false;
     longPressTimerRef.current = setTimeout(() => {
       isLongPressTriggered.current = true;
-      triggerHaptic('medium');
       onEdit();
     }, 550);
   };
@@ -80,7 +79,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         </div>
       </div>
 
-      {/* Right: Tab Button (stops propagation so pressing Tab won't trigger card long-press) */}
+      {/* Right: Xong Action Button (stops propagation so pressing button won't trigger card long-press) */}
       <div
         className="shrink-0"
         onPointerDown={(e) => e.stopPropagation()}
@@ -93,7 +92,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             onTap();
           }}
           className={`
-            h-10 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95
+            h-10 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer
             ${
               isCompleted
                 ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
@@ -101,21 +100,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             }
           `}
         >
-          {habit.type === 'one_tap' ? (
-            isCompleted ? (
-              <>
-                <Check className="w-4 h-4 stroke-[2.5]" />
-                <span>Xong</span>
-              </>
-            ) : (
-              <span>Tab</span>
-            )
-          ) : (
-            <>
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Tab</span>
-            </>
-          )}
+          <Check className={`w-4 h-4 ${isCompleted ? 'stroke-[2.5]' : 'stroke-[2] opacity-70'}`} />
+          <span>Xong</span>
         </button>
       </div>
     </div>

@@ -50,15 +50,17 @@ class HabitViewModel @Inject constructor(
         initialValue = HabitUiState(isLoading = true)
     )
 
-    fun onHabitTapped(habit: HabitEntity) {
+    fun onHabitTapped(habit: HabitEntity, onCompleted: (() -> Unit)? = null) {
         viewModelScope.launch {
             val dateStr = _selectedDate.value.toString()
             val existingLog = repository.getLog(habit.id, dateStr)
+            var justCompleted = false
 
             when (habit.type) {
                 HabitType.ONE_TAP -> {
                     val newCompleted = !(existingLog?.completed ?: false)
                     val newCount = if (newCompleted) 1 else 0
+                    if (newCompleted) justCompleted = true
                     repository.upsertLog(
                         HabitLogEntity(
                             id = existingLog?.id ?: 0,
@@ -73,6 +75,9 @@ class HabitViewModel @Inject constructor(
                     val currentCount = existingLog?.count ?: 0
                     val newCount = currentCount + 1
                     val newCompleted = newCount >= habit.targetCount
+                    if (newCompleted && !(existingLog?.completed ?: false)) {
+                        justCompleted = true
+                    }
                     repository.upsertLog(
                         HabitLogEntity(
                             id = existingLog?.id ?: 0,
@@ -86,6 +91,7 @@ class HabitViewModel @Inject constructor(
                 HabitType.UNLIMITED -> {
                     val currentCount = existingLog?.count ?: 0
                     val newCount = currentCount + 1
+                    if (currentCount == 0) justCompleted = true
                     repository.upsertLog(
                         HabitLogEntity(
                             id = existingLog?.id ?: 0,
@@ -96,6 +102,10 @@ class HabitViewModel @Inject constructor(
                         )
                     )
                 }
+            }
+
+            if (justCompleted) {
+                onCompleted?.invoke()
             }
         }
     }

@@ -110,7 +110,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!habit) return;
 
     if (settings.soundEnabled) soundEffects.playTap();
-    if (settings.vibrationEnabled) triggerHaptic('light');
+    // Phản hồi rung CHỈ thực hiện khi bấm tap hoàn thành 1 habit
 
     setLogs((prevLogs) => {
       const existingLogIndex = prevLogs.findIndex((l) => l.habitId === habitId && l.date === date);
@@ -160,7 +160,13 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           triggerCelebration();
         }
       } else {
+        const wasCompletedBefore = currentLog.completed;
         newCompleted = newCount > 0;
+        if (!wasCompletedBefore && newCompleted) {
+          if (settings.soundEnabled) soundEffects.playComplete();
+          if (settings.vibrationEnabled) triggerHaptic('success');
+          triggerCelebration();
+        }
       }
 
       const updatedLog: HabitLog = {

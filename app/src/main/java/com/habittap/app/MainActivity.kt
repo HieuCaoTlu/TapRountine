@@ -152,19 +152,17 @@ fun HabitTapApp(viewModel: HabitViewModel = viewModel()) {
                         viewMode = viewMode,
                         onViewModeChange = {
                             viewMode = it
-                            triggerAndroidHaptic(context, "light")
                         },
                         showCompleted = showCompleted,
                         onToggleShowCompleted = {
                             showCompleted = !showCompleted
-                            triggerAndroidHaptic(context, "light")
                         },
-                        onHabitTapped = {
-                            triggerAndroidHaptic(context, "heavy")
-                            viewModel.onHabitTapped(it)
+                        onHabitTapped = { habit ->
+                            viewModel.onHabitTapped(habit) {
+                                triggerAndroidHaptic(context, "heavy")
+                            }
                         },
                         onHabitLongClick = {
-                            triggerAndroidHaptic(context, "medium")
                             editingHabit = it
                             isCreateModalOpen = true
                         }
@@ -172,14 +170,12 @@ fun HabitTapApp(viewModel: HabitViewModel = viewModel()) {
                     1 -> ProgressScreen(
                         uiState = uiState,
                         onEditHabit = {
-                            triggerAndroidHaptic(context, "light")
                             editingHabit = it
                             isCreateModalOpen = true
                         }
                     )
                     2 -> SettingsScreen(
                         onClearAllData = {
-                            triggerAndroidHaptic(context, "heavy")
                             viewModel.clearAllData()
                             Toast.makeText(context, "Đã xóa toàn bộ dữ liệu!", Toast.LENGTH_SHORT).show()
                         }
@@ -214,7 +210,6 @@ fun HabitTapApp(viewModel: HabitViewModel = viewModel()) {
                     ) {
                         IconButton(
                             onClick = {
-                                triggerAndroidHaptic(context, "light")
                                 currentTab = 0
                             },
                             modifier = Modifier
@@ -232,7 +227,6 @@ fun HabitTapApp(viewModel: HabitViewModel = viewModel()) {
 
                         IconButton(
                             onClick = {
-                                triggerAndroidHaptic(context, "light")
                                 currentTab = 1
                             },
                             modifier = Modifier
@@ -250,7 +244,6 @@ fun HabitTapApp(viewModel: HabitViewModel = viewModel()) {
 
                         IconButton(
                             onClick = {
-                                triggerAndroidHaptic(context, "light")
                                 currentTab = 2
                             },
                             modifier = Modifier
@@ -271,7 +264,6 @@ fun HabitTapApp(viewModel: HabitViewModel = viewModel()) {
                 // Add button (+)
                 FloatingActionButton(
                     onClick = {
-                        triggerAndroidHaptic(context, "medium")
                         editingHabit = null
                         isCreateModalOpen = true
                     },
@@ -501,7 +493,7 @@ fun HabitCardItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                // Square Icon
+                // Square Icon with real Vector Icon
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -509,7 +501,7 @@ fun HabitCardItem(
                         .background(Color(0xFFF1F5F9)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = getEmojiForIcon(habit.icon), fontSize = 20.sp)
+                    HabitVectorIcon(habit.icon, modifier = Modifier.size(22.dp))
                 }
 
                 Column {
@@ -535,17 +527,33 @@ fun HabitCardItem(
                 }
             }
 
-            // Tab Button
+            val isCompleted = when (habit.type) {
+                HabitType.ONE_TAP -> count >= 1
+                HabitType.N_TAP -> count >= habit.targetCount
+                HabitType.UNLIMITED -> count > 0
+            }
+
+            // Xong Action Button (thay thế chữ Tab)
             Button(
                 onClick = onTap,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF1F5F9),
-                    contentColor = Color(0xFF171717)
+                    containerColor = if (isCompleted) Color(0xFF171717) else Color(0xFFF1F5F9),
+                    contentColor = if (isCompleted) Color.White else Color(0xFF171717)
                 ),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
             ) {
-                Text(text = "Tab", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = "Xong",
+                    modifier = Modifier.size(15.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Xong",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
@@ -601,7 +609,7 @@ fun ProgressScreen(
                                         .background(Color(0xFFF1F5F9)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(text = getEmojiForIcon(habit.icon), fontSize = 16.sp)
+                                    HabitVectorIcon(habit.icon, modifier = Modifier.size(20.dp))
                                 }
                                 Column {
                                     Text(
@@ -625,20 +633,22 @@ fun ProgressScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Mini routine heatmap 14 weeks
-                        val mockWeeks = remember {
+                        // Routine heatmap 14 tuần
+                        val todayCount = uiState.todayLogs[habit.id]?.count ?: 0
+                        val weeksData = remember(todayCount) {
                             List(14) { weekIdx ->
                                 List(7) { dayIdx ->
-                                    val count = if ((weekIdx * 7 + dayIdx) % 3 == 0) 5 else if ((weekIdx + dayIdx) % 2 == 0) 1 else 0
+                                    val isCurrentDay = (weekIdx == 13 && dayIdx == 6)
+                                    val dayCount = if (isCurrentDay) todayCount else if ((weekIdx + dayIdx) % 3 == 0) 2 else 0
                                     DayContribution(
-                                        date = "2026-09-01",
-                                        taps = count,
-                                        completed = count > 0
+                                        date = "2026-10-12",
+                                        taps = dayCount,
+                                        completed = dayCount > 0
                                     )
                                 }
                             }
                         }
-                        GitHubCommitHeatmap(weeksData = mockWeeks, habitType = habit.type)
+                        GitHubCommitHeatmap(weeksData = weeksData, habitType = habit.type)
                     }
                 }
             }
@@ -696,7 +706,6 @@ fun SettingsScreen(
                         checked = notificationsEnabled,
                         onCheckedChange = {
                             notificationsEnabled = it
-                            triggerAndroidHaptic(context, "light")
                             Toast.makeText(context, if (it) "Đã bật nhắc nhở" else "Đã tắt nhắc nhở", Toast.LENGTH_SHORT).show()
                         }
                     )
@@ -716,18 +725,17 @@ fun SettingsScreen(
 
                 Divider(color = Color(0xFFF1F5F9))
 
-                // Âm thanh khi Tab
+                // Âm thanh khi hoàn thành
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Âm thanh khi tab", fontSize = 14.sp)
+                    Text(text = "Âm thanh hoàn thành", fontSize = 14.sp)
                     Switch(
                         checked = soundEnabled,
                         onCheckedChange = {
                             soundEnabled = it
-                            triggerAndroidHaptic(context, "light")
                         }
                     )
                 }
@@ -738,12 +746,11 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Rung phản hồi (Haptic)", fontSize = 14.sp)
+                    Text(text = "Rung khi hoàn thành thói quen", fontSize = 14.sp)
                     Switch(
                         checked = vibrationEnabled,
                         onCheckedChange = {
                             vibrationEnabled = it
-                            if (it) triggerAndroidHaptic(context, "heavy")
                         }
                     )
                 }
@@ -765,7 +772,6 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            triggerAndroidHaptic(context, "medium")
                             Toast.makeText(context, "Đã tạo bản sao lưu thành công!", Toast.LENGTH_SHORT).show()
                         },
                     verticalAlignment = Alignment.CenterVertically
@@ -813,16 +819,17 @@ fun HabitDialog(
     onSave: (String, HabitType, Int, String, String) -> Unit,
     onDelete: () -> Unit
 ) {
-    val context = LocalContext.current
     var title by remember { mutableStateOf(habit?.title ?: "") }
     var type by remember { mutableStateOf(habit?.type ?: HabitType.ONE_TAP) }
     var target by remember { mutableStateOf(habit?.targetCount ?: 5) }
     var icon by remember { mutableStateOf(habit?.icon ?: "droplets") }
-    var isIconPickerOpen by remember { mutableStateOf(false) }
 
-    val iconList = listOf(
-        "droplets", "book-open", "dumbbell", "heart", 
-        "sparkles", "moon", "code", "coffee", "footprints"
+    val richIconList = listOf(
+        "droplets", "book-open", "dumbbell", "heart", "sparkles",
+        "flame", "code", "moon", "coffee", "footprints",
+        "brain", "smile", "pencil", "zap", "music",
+        "bike", "sun", "target", "clock", "wallet",
+        "award", "leaf", "activity", "bed", "star"
     )
 
     AlertDialog(
@@ -830,63 +837,68 @@ fun HabitDialog(
         title = { Text(text = if (habit != null) "Sửa thói quen" else "Tạo thói quen", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                // Clickable Icon Box để đổi biểu tượng
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF1F5F9))
-                        .clickable {
-                            triggerAndroidHaptic(context, "light")
-                            isIconPickerOpen = !isIconPickerOpen
-                        }
-                        .align(Alignment.CenterHorizontally),
-                    contentAlignment = Alignment.Center
+                // Header biểu tượng hiện tại
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(text = getEmojiForIcon(icon), fontSize = 24.sp)
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Color(0xFFF1F5F9)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        HabitVectorIcon(icon, modifier = Modifier.size(28.dp))
+                    }
+                    Column {
+                        Text(text = "Biểu tượng thói quen", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF171717))
+                        Text(text = "Chạm 1 icon bên dưới để đổi", fontSize = 11.sp, color = Color(0xFF737373))
+                    }
                 }
 
-                if (isIconPickerOpen) {
-                    Text(text = "Chọn biểu tượng:", fontSize = 12.sp, color = Color.Gray)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround
+                // Khay chọn biểu tượng Vector Thật (25 icon phong phú)
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFF8FAFC),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .heightIn(max = 130.dp)
                     ) {
-                        iconList.take(5).forEach { iconKey ->
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (icon == iconKey) Color(0xFF171717) else Color(0xFFF1F5F9))
-                                    .clickable {
-                                        triggerAndroidHaptic(context, "light")
-                                        icon = iconKey
-                                        isIconPickerOpen = false
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = getEmojiForIcon(iconKey), fontSize = 16.sp)
-                            }
-                        }
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        iconList.drop(5).forEach { iconKey ->
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (icon == iconKey) Color(0xFF171717) else Color(0xFFF1F5F9))
-                                    .clickable {
-                                        triggerAndroidHaptic(context, "light")
-                                        icon = iconKey
-                                        isIconPickerOpen = false
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = getEmojiForIcon(iconKey), fontSize = 16.sp)
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(richIconList.chunked(5)) { rowIcons ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceAround
+                                ) {
+                                    rowIcons.forEach { iconKey ->
+                                        val isSelected = icon == iconKey
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(if (isSelected) Color(0xFF171717) else Color.White)
+                                                .clickable {
+                                                    icon = iconKey
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            HabitVectorIcon(
+                                                icon = iconKey,
+                                                modifier = Modifier.size(18.dp),
+                                                tint = if (isSelected) Color.White else Color(0xFF475569)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -917,7 +929,6 @@ fun HabitDialog(
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
-                                    triggerAndroidHaptic(context, "light")
                                     type = t
                                 }
                         ) {
@@ -941,13 +952,11 @@ fun HabitDialog(
                         Text("Số lần mục tiêu:")
                         IconButton(onClick = {
                             if (target > 1) {
-                                triggerAndroidHaptic(context, "light")
                                 target--
                             }
                         }) { Text("-") }
                         Text(text = "$target", fontWeight = FontWeight.Bold)
                         IconButton(onClick = {
-                            triggerAndroidHaptic(context, "light")
                             target++
                         }) { Text("+") }
                     }
@@ -985,17 +994,44 @@ fun HabitDialog(
     )
 }
 
-fun getEmojiForIcon(icon: String): String {
-    return when (icon) {
-        "droplets" -> "💧"
-        "book-open" -> "📖"
-        "dumbbell" -> "🏋️"
-        "heart" -> "❤️"
-        "sparkles" -> "🧘"
-        "moon" -> "🌙"
-        "code" -> "💻"
-        "coffee" -> "☕"
-        "footprints" -> "👟"
-        else -> "✨"
+@Composable
+fun HabitVectorIcon(
+    icon: String,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.Unspecified
+) {
+    val vector = when (icon) {
+        "droplets" -> Icons.Default.WaterDrop
+        "book-open" -> Icons.Default.MenuBook
+        "dumbbell" -> Icons.Default.FitnessCenter
+        "heart" -> Icons.Default.Favorite
+        "sparkles" -> Icons.Default.SelfImprovement
+        "flame" -> Icons.Default.LocalFireDepartment
+        "code" -> Icons.Default.Code
+        "moon" -> Icons.Default.Bedtime
+        "coffee" -> Icons.Default.LocalCafe
+        "footprints" -> Icons.Default.DirectionsWalk
+        "brain" -> Icons.Default.Psychology
+        "smile" -> Icons.Default.SentimentSatisfied
+        "pencil" -> Icons.Default.Edit
+        "zap" -> Icons.Default.Bolt
+        "music" -> Icons.Default.MusicNote
+        "bike" -> Icons.Default.DirectionsBike
+        "sun" -> Icons.Default.WbSunny
+        "target" -> Icons.Default.GpsFixed
+        "clock" -> Icons.Default.AccessTime
+        "wallet" -> Icons.Default.AccountBalanceWallet
+        "award" -> Icons.Default.EmojiEvents
+        "leaf" -> Icons.Default.Spa
+        "activity" -> Icons.Default.MonitorHeart
+        "bed" -> Icons.Default.Hotel
+        "star" -> Icons.Default.Star
+        else -> Icons.Default.CheckCircle
     }
+    Icon(
+        imageVector = vector,
+        contentDescription = icon,
+        modifier = modifier,
+        tint = if (tint == Color.Unspecified) Color(0xFF171717) else tint
+    )
 }

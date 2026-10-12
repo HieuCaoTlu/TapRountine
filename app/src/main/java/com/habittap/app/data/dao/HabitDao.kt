@@ -10,6 +10,12 @@ interface HabitDao {
     @Query("SELECT * FROM habits ORDER BY id DESC")
     fun getAllHabits(): Flow<List<HabitEntity>>
 
+    @Query("SELECT * FROM habits ORDER BY id DESC")
+    suspend fun getAllHabitsList(): List<HabitEntity>
+
+    @Query("SELECT * FROM habits WHERE id = :id LIMIT 1")
+    suspend fun getHabitById(id: Long): HabitEntity?
+
     @Query("SELECT * FROM habit_logs WHERE date = :date")
     fun getLogsForDate(date: String): Flow<List<HabitLogEntity>>
 

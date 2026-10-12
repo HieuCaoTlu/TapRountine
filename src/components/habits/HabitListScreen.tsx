@@ -24,7 +24,6 @@ export const HabitListScreen: React.FC = () => {
   const isToday = selectedDate === todayStr;
 
   const handlePrevDay = () => {
-    triggerHaptic('light');
     const cur = new Date(selectedDate + 'T00:00:00');
     cur.setDate(cur.getDate() - 1);
     const y = cur.getFullYear();
@@ -34,7 +33,6 @@ export const HabitListScreen: React.FC = () => {
   };
 
   const handleNextDay = () => {
-    triggerHaptic('light');
     const cur = new Date(selectedDate + 'T00:00:00');
     cur.setDate(cur.getDate() + 1);
     const y = cur.getFullYear();
@@ -98,7 +96,6 @@ export const HabitListScreen: React.FC = () => {
 
         <button
           onClick={() => {
-            triggerHaptic('light');
             setSelectedDate(todayStr);
           }}
           className="text-base font-bold text-neutral-900 dark:text-neutral-100 hover:opacity-80 transition-opacity cursor-pointer"
@@ -120,7 +117,6 @@ export const HabitListScreen: React.FC = () => {
         <div className="relative flex items-center p-1 bg-neutral-200/70 dark:bg-neutral-800 rounded-full text-xs font-semibold select-none">
           <button
             onClick={() => {
-              triggerHaptic('light');
               setViewMode('all');
             }}
             className={`relative z-10 px-3.5 py-1.5 rounded-full transition-colors duration-150 cursor-pointer ${
@@ -133,7 +129,6 @@ export const HabitListScreen: React.FC = () => {
           </button>
           <button
             onClick={() => {
-              triggerHaptic('light');
               setViewMode('grouped');
             }}
             className={`relative z-10 px-3.5 py-1.5 rounded-full transition-colors duration-150 cursor-pointer ${
@@ -213,7 +208,6 @@ export const HabitListScreen: React.FC = () => {
         <div className="pt-3 flex flex-col items-center justify-center">
           <button
             onClick={() => {
-              triggerHaptic('light');
               setShowCompleted(!showCompleted);
             }}
             className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 py-1 px-3 transition-opacity opacity-50 hover:opacity-90 cursor-pointer"

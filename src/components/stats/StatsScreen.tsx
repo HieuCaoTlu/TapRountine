@@ -48,7 +48,7 @@ const MiniRoutineCard: React.FC<MiniRoutineCardProps> = ({
             </h4>
             {/* Clean unified font (no discordant font-mono here) */}
             <div className="text-xs text-neutral-500 font-normal mt-0.5">
-              Chuỗi {currentStreak} ngày · {totalTaps} lần tab
+              Chuỗi {currentStreak} ngày · {totalTaps} lần thực hiện
             </div>
           </div>
         </div>
@@ -89,38 +89,20 @@ const MiniRoutineCard: React.FC<MiniRoutineCardProps> = ({
 
                 const log = habitLogsMap.get(day.date);
                 const count = log?.count || 0;
-                const isCompleted = log?.completed || false;
 
-                // Color cell:
-                // One-tap: chỉ đổ màu là được
-                // Counter / Streak Tab: đánh số lần tab lên đó
-                if (habit.type === 'one_tap') {
-                  const filled = isCompleted || count >= 1;
-                  return (
-                    <div
-                      key={dIdx}
-                      title={`${day.date}: ${filled ? 'Đã hoàn thành' : 'Chưa'}`}
-                      className={`
-                        w-[14px] h-[14px] sm:w-[16px] sm:h-[16px] rounded-[3px] transition-all
-                        ${filled ? 'bg-neutral-900 dark:bg-white' : 'bg-neutral-100 dark:bg-neutral-800'}
-                      `}
-                    />
-                  );
-                }
-
-                // Counter / Streak Tab
-                let bgClass = 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400';
-                if (count >= 8) bgClass = 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold';
+                // Counter theo ngày và số lần thực hiện trong 1 ngày ghi thẳng ở trong ô
+                let bgClass = 'bg-neutral-100 dark:bg-neutral-800 text-transparent';
+                if (count >= 8) bgClass = 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-extrabold';
                 else if (count >= 5) bgClass = 'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900 font-bold';
-                else if (count >= 2) bgClass = 'bg-neutral-500 dark:bg-neutral-400 text-white font-medium';
-                else if (count > 0) bgClass = 'bg-neutral-300 dark:bg-neutral-600 text-neutral-800 dark:text-white font-medium';
+                else if (count >= 2) bgClass = 'bg-neutral-500 dark:bg-neutral-400 text-white dark:text-neutral-900 font-semibold';
+                else if (count === 1) bgClass = 'bg-neutral-300 dark:bg-neutral-600 text-neutral-900 dark:text-white font-semibold';
 
                 return (
                   <div
                     key={dIdx}
-                    title={`${day.date}: ${count} lần tab`}
+                    title={`${day.date}: ${count} lần`}
                     className={`
-                      w-[14px] h-[14px] sm:w-[16px] sm:h-[16px] rounded-[3px] flex items-center justify-center text-[8px] sm:text-[9px] font-mono leading-none select-none
+                      w-[14px] h-[14px] sm:w-[16px] sm:h-[16px] rounded-[3px] flex items-center justify-center text-[8px] sm:text-[9px] font-mono leading-none select-none transition-all
                       ${bgClass}
                     `}
                   >

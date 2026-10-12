@@ -56,7 +56,6 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => {
-              triggerHaptic('light');
               setActiveTab('widgets');
             }}
             className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
@@ -70,7 +69,6 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
 
           <button
             onClick={() => {
-              triggerHaptic('light');
               setActiveTab('kotlin_code');
             }}
             className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
@@ -115,7 +113,6 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
             {/* Menu 1: Thói quen */}
             <button
               onClick={() => {
-                triggerHaptic('light');
                 setActiveTab('habits');
               }}
               title="Thói quen"
@@ -131,7 +128,6 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
             {/* Menu 2: Tiến độ */}
             <button
               onClick={() => {
-                triggerHaptic('light');
                 setActiveTab('stats');
               }}
               title="Tiến độ"
@@ -147,7 +143,6 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
             {/* Menu 3: Cài đặt */}
             <button
               onClick={() => {
-                triggerHaptic('light');
                 setActiveTab('settings');
               }}
               title="Cài đặt"
@@ -164,7 +159,6 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({ children }) => {
           {/* Nút thêm thói quen hình tròn nằm bên phải (rộng và đã tay) */}
           <button
             onClick={() => {
-              triggerHaptic('heavy');
               setEditingHabit(null);
               setIsCreateModalOpen(true);
             }}

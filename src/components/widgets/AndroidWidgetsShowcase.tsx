@@ -35,7 +35,6 @@ export const AndroidWidgetsShowcase: React.FC = () => {
   }, [habits]);
 
   const handleWidgetTap = (habit: Habit) => {
-    triggerHaptic('heavy');
     tapHabit(habit.id, todayStr);
   };
 
@@ -170,7 +169,7 @@ export const AndroidWidgetsShowcase: React.FC = () => {
                         {isDone
                           ? 'Xong'
                           : habit.type === 'one_tap'
-                          ? 'Tab'
+                          ? 'Xong'
                           : `${count}/${habit.targetCount || '∞'}`}
                       </span>
                     </button>
@@ -231,7 +230,7 @@ export const AndroidWidgetsShowcase: React.FC = () => {
                           {isDone
                             ? 'Xong'
                             : habit.type === 'one_tap'
-                            ? 'Tab'
+                            ? 'Xong'
                             : `${count}/${habit.targetCount || '∞'}`}
                         </span>
                       </button>

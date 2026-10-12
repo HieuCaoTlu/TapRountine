@@ -14,7 +14,6 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const handleToggleNotifications = async () => {
-    triggerHaptic('medium');
     const nextState = !settings.notificationsEnabled;
     if (nextState) {
       try {
@@ -47,8 +46,7 @@ export const SettingsScreen: React.FC = () => {
     updateSettings({ soundEnabled: nextState });
     if (nextState) {
       soundEffects.playTap();
-      triggerHaptic('light');
-      showToast('Đã bật âm thanh tab');
+      showToast('Đã bật âm thanh');
     } else {
       showToast('Đã tắt âm thanh');
     }
@@ -58,15 +56,13 @@ export const SettingsScreen: React.FC = () => {
     const nextState = !settings.vibrationEnabled;
     updateSettings({ vibrationEnabled: nextState });
     if (nextState) {
-      triggerHaptic('heavy');
-      showToast('Đã bật rung phản hồi cực đã');
+      showToast('Đã bật rung khi hoàn thành thói quen');
     } else {
       showToast('Đã tắt rung');
     }
   };
 
   const handleToggleDarkMode = () => {
-    triggerHaptic('medium');
     const nextTheme = settings.theme === 'dark' ? 'light' : 'dark';
     updateSettings({ theme: nextTheme });
     showToast(nextTheme === 'dark' ? 'Đã bật chế độ tối' : 'Đã bật chế độ sáng');
@@ -74,7 +70,6 @@ export const SettingsScreen: React.FC = () => {
 
   const handleCreateBackup = () => {
     try {
-      triggerHaptic('heavy');
       exportBackupData(habits, logs, settings);
       showToast('Đã xuất và tải tệp sao lưu JSON');
     } catch (err) {
@@ -92,7 +87,6 @@ export const SettingsScreen: React.FC = () => {
         const text = event.target?.result as string;
         const parsed = parseBackupFile(text);
         if (parsed.habits && Array.isArray(parsed.habits)) {
-          triggerHaptic('heavy');
           restoreData(parsed.habits, parsed.logs || [], parsed.settings);
           showToast('Phục hồi dữ liệu thành công!');
         } else {
@@ -107,8 +101,7 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const handleClearAll = () => {
-    triggerHaptic('heavy');
-    if (window.confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa toàn bộ dữ liệu thói quen và lịch sử tab? Thao tác này không thể hoàn tác.')) {
+    if (window.confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa toàn bộ dữ liệu thói quen và lịch sử hoàn thành? Thao tác này không thể hoàn tác.')) {
       clearAllData();
       showToast('Đã xóa sạch toàn bộ dữ liệu');
     }

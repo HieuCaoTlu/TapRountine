@@ -43,18 +43,8 @@ fun GitHubCommitHeatmap(
                         modifier = Modifier
                             .size(16.dp)
                             .clip(RoundedCornerShape(3.dp))
-                            .background(cellColor),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (day.taps > 0) {
-                            Text(
-                                text = if (day.taps > 9) "9+" else day.taps.toString(),
-                                color = Color.White,
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
+                            .background(cellColor)
+                    )
                 }
             }
         }

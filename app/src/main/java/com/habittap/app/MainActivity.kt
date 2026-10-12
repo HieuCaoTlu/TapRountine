@@ -54,9 +54,9 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * Triggers visceral, tactile haptic feedback with rich vibration patterns
+ * Rung mặc định của hệ thống
  */
-fun triggerAndroidHaptic(context: Context, type: String = "medium") {
+fun triggerAndroidHaptic(context: Context, type: String = "default") {
     try {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
@@ -69,31 +69,10 @@ fun triggerAndroidHaptic(context: Context, type: String = "medium") {
         if (!vibrator.hasVibrator()) return
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            when (type) {
-                "light" -> {
-                    val timings = longArrayOf(0, 18)
-                    val amplitudes = intArrayOf(0, 120)
-                    vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
-                }
-                "medium" -> {
-                    // Two punchy bursts
-                    val timings = longArrayOf(0, 35, 25, 45)
-                    val amplitudes = intArrayOf(0, 200, 0, 255)
-                    vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
-                }
-                "heavy", "success" -> {
-                    // Deep 3-stage heavy haptic pulse
-                    val timings = longArrayOf(0, 40, 25, 55, 30, 80)
-                    val amplitudes = intArrayOf(0, 220, 0, 240, 0, 255)
-                    vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
-                }
-                else -> {
-                    vibrator.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
-                }
-            }
+            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(longArrayOf(0, 40, 30, 50), -1)
+            vibrator.vibrate(50)
         }
     } catch (_: Exception) {
         // Fallback gracefully
@@ -619,15 +598,44 @@ fun ProgressScreen(
                                     )
                                     val count = uiState.todayLogs[habit.id]?.count ?: 0
                                     Text(
-                                        text = "Hôm nay: $count lần",
+                                        text = if (habit.type == HabitType.ONE_TAP) "Thói quen hàng ngày" else "Hôm nay: $count lần",
                                         fontSize = 12.sp,
                                         color = Color(0xFF737373)
                                     )
                                 }
                             }
 
-                            IconButton(onClick = { onEditHabit(habit) }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Sửa", modifier = Modifier.size(18.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                val isCountBased = habit.type != HabitType.ONE_TAP
+                                val statValue = if (isCountBased) {
+                                    (uiState.todayLogs[habit.id]?.count ?: 0)
+                                } else {
+                                    if ((uiState.todayLogs[habit.id]?.count ?: 0) > 0) 1 else 0
+                                }
+                                val statUnit = if (isCountBased) "Lần" else "Ngày"
+
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(
+                                        text = "$statValue",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF171717)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = statUnit,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF737373)
+                                    )
+                                }
+
+                                IconButton(onClick = { onEditHabit(habit) }) {
+                                    Icon(Icons.Default.Edit, contentDescription = "Sửa", modifier = Modifier.size(18.dp))
+                                }
                             }
                         }
 

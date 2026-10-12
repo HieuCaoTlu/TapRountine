@@ -34,6 +34,11 @@ const MiniRoutineCard: React.FC<MiniRoutineCardProps> = ({
   });
   const { currentStreak } = calculateStreaks(completedDates);
 
+  // Hiển thị số bên tay phải kèm giá trị Ngày, riêng habit counter và unlimited thì đếm số lần thay vì ngày
+  const isCountBased = habit.type === 'n_tap' || habit.type === 'unlimited';
+  const displayValue = isCountBased ? totalTaps : completedDates.size;
+  const unitLabel = isCountBased ? 'Lần' : 'Ngày';
+
   return (
     <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 space-y-3 shadow-2xs hover:border-neutral-400 dark:hover:border-neutral-700 transition-all">
       {/* Header */}
@@ -46,29 +51,41 @@ const MiniRoutineCard: React.FC<MiniRoutineCardProps> = ({
             <h4 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight">
               {habit.title}
             </h4>
-            {/* Clean unified font (no discordant font-mono here) */}
             <div className="text-xs text-neutral-500 font-normal mt-0.5">
-              Chuỗi {currentStreak} ngày · {totalTaps} lần thực hiện
+              {isCountBased
+                ? (habit.type === 'n_tap' ? `Mục tiêu ${habit.targetCount} lần/ngày` : 'Không giới hạn')
+                : `Chuỗi ${currentStreak} ngày liên tiếp`}
             </div>
           </div>
         </div>
 
-        {/* Edit / Delete triggers */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={onEdit}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-            title="Chỉnh sửa thói quen"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-            title="Xóa thói quen"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+        {/* Số bên tay phải kèm giá trị Ngày / Lần & Actions */}
+        <div className="flex items-center gap-2.5">
+          <div className="text-right flex items-baseline gap-1">
+            <span className="text-lg font-bold tracking-tight text-neutral-900 dark:text-white font-mono">
+              {displayValue}
+            </span>
+            <span className="text-xs font-semibold text-neutral-500">
+              {unitLabel}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-0.5 border-l border-neutral-200/60 dark:border-neutral-800 pl-2">
+            <button
+              onClick={onEdit}
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              title="Chỉnh sửa thói quen"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onDelete}
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+              title="Xóa thói quen"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -89,25 +106,30 @@ const MiniRoutineCard: React.FC<MiniRoutineCardProps> = ({
 
                 const log = habitLogsMap.get(day.date);
                 const count = log?.count || 0;
+                const isCompleted = log?.completed || false;
 
-                // Counter theo ngày và số lần thực hiện trong 1 ngày ghi thẳng ở trong ô
-                let bgClass = 'bg-neutral-100 dark:bg-neutral-800 text-transparent';
-                if (count >= 8) bgClass = 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-extrabold';
-                else if (count >= 5) bgClass = 'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900 font-bold';
-                else if (count >= 2) bgClass = 'bg-neutral-500 dark:bg-neutral-400 text-white dark:text-neutral-900 font-semibold';
-                else if (count === 1) bgClass = 'bg-neutral-300 dark:bg-neutral-600 text-neutral-900 dark:text-white font-semibold';
+                // Color cell intensity theo chuẩn GitHub
+                let bgClass = 'bg-neutral-100 dark:bg-neutral-800';
+                if (isCountBased) {
+                  if (count >= 8) bgClass = 'bg-neutral-900 dark:bg-white';
+                  else if (count >= 5) bgClass = 'bg-neutral-800 dark:bg-neutral-200';
+                  else if (count >= 2) bgClass = 'bg-neutral-500 dark:bg-neutral-400';
+                  else if (count === 1) bgClass = 'bg-neutral-300 dark:bg-neutral-600';
+                } else {
+                  if (isCompleted || count > 0) {
+                    bgClass = 'bg-neutral-900 dark:bg-white';
+                  }
+                }
 
                 return (
                   <div
                     key={dIdx}
-                    title={`${day.date}: ${count} lần`}
+                    title={`${day.date}: ${count} ${isCountBased ? 'lần' : 'ngày'}`}
                     className={`
-                      w-[14px] h-[14px] sm:w-[16px] sm:h-[16px] rounded-[3px] flex items-center justify-center text-[8px] sm:text-[9px] font-mono leading-none select-none transition-all
+                      w-[14px] h-[14px] sm:w-[16px] sm:h-[16px] rounded-[3px] select-none transition-all
                       ${bgClass}
                     `}
-                  >
-                    {count > 0 ? (count > 9 ? '9+' : count) : ''}
-                  </div>
+                  />
                 );
               })}
             </div>

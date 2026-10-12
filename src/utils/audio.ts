@@ -128,23 +128,13 @@ class SoundFX {
 export const soundEffects = new SoundFX();
 
 /**
- * Super tactile, heavy haptic vibration feedback - cực đã tay
+ * Rung mặc định của hệ thống / thiết bị (không cần pattern haptic phức tạp)
  */
-export function triggerHaptic(type: 'light' | 'medium' | 'success' | 'heavy' = 'medium') {
+export function triggerHaptic(_type?: 'light' | 'medium' | 'success' | 'heavy') {
   if (typeof window !== 'undefined' && 'vibrate' in navigator) {
     try {
-      if (type === 'light') {
-        navigator.vibrate(35);
-      } else if (type === 'medium') {
-        // Double punch with tactile pause
-        navigator.vibrate([45, 25, 55]);
-      } else if (type === 'heavy') {
-        // Triple punch heavy rumble
-        navigator.vibrate([60, 30, 80, 40, 110]);
-      } else if (type === 'success') {
-        // Multi-stage celebration burst
-        navigator.vibrate([50, 30, 70, 30, 100, 40, 150]);
-      }
+      // Rung mặc định thông thường 50ms
+      navigator.vibrate(50);
     } catch {
       // Fallback
     }

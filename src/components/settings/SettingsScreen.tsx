@@ -170,7 +170,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Âm thanh */}
         <div className="flex items-center justify-between py-1 border-t border-neutral-100 dark:border-neutral-800">
           <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-            Âm thanh khi tab
+            Âm thanh khi hoàn thành
           </div>
           <button
             type="button"
@@ -192,7 +192,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Rung phản hồi */}
         <div className="flex items-center justify-between py-1 border-t border-neutral-100 dark:border-neutral-800">
           <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-            Rung phản hồi (Haptic đã tay)
+            Rung khi hoàn thành thói quen (Mặc định)
           </div>
           <button
             type="button"

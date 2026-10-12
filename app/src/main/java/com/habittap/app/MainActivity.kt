@@ -638,25 +638,6 @@ fun ProgressScreen(
                                 }
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Routine heatmap 14 tuần
-                        val todayCount = uiState.todayLogs[habit.id]?.count ?: 0
-                        val weeksData = remember(todayCount) {
-                            List(14) { weekIdx ->
-                                List(7) { dayIdx ->
-                                    val isCurrentDay = (weekIdx == 13 && dayIdx == 6)
-                                    val dayCount = if (isCurrentDay) todayCount else if ((weekIdx + dayIdx) % 3 == 0) 2 else 0
-                                    DayContribution(
-                                        date = "2026-10-12",
-                                        taps = dayCount,
-                                        completed = dayCount > 0
-                                    )
-                                }
-                            }
-                        }
-                        GitHubCommitHeatmap(weeksData = weeksData, habitType = habit.type)
                     }
                 }
             }
